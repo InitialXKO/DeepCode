@@ -52,12 +52,13 @@ jobs:
       - name: Place backend executable where Tauri expects it
         shell: bash
         run: |
-          # Standardized executable name is "api_server"
-          # PyInstaller adds ".exe" on Windows automatically.
+          # Determine executable name based on runner OS
           if [[ "${{ runner.os }}" == "Windows" ]]; then
             EXECUTABLE_NAME="api_server.exe"
+          elif [[ "${{ runner.os }}" == "macOS" ]]; then
+            EXECUTABLE_NAME="api_server_macos"
           else
-            EXECUTABLE_NAME="api_server"
+            EXECUTABLE_NAME="api_server_linux"
           fi
 
           SOURCE_PATH="dist/$EXECUTABLE_NAME"
@@ -70,11 +71,6 @@ jobs:
           if [ -f "$SOURCE_PATH" ]; then
             mv "$SOURCE_PATH" "$DEST_PATH"
             echo "[+] Successfully moved backend executable."
-            # Also rename on Windows to remove the .exe extension
-            if [[ "${{ runner.os }}" == "Windows" ]]; then
-              mv "$DEST_PATH" "$DEST_DIR/api_server"
-              echo "[+] Renamed api_server.exe to api_server on Windows."
-            fi
           else
             echo "[!] Error: Backend executable not found at $SOURCE_PATH."
             echo "[*] Listing contents of dist/ for debugging:"
