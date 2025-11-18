@@ -15,13 +15,8 @@ def build_backend():
         print(f"[!] Error: Target script {api_script} not found.", file=sys.stderr)
         sys.exit(1)
 
-    # Define executable name based on OS
-    if sys.platform == "win32":
-        executable_name = "api_server.exe"
-    elif sys.platform == "darwin":
-        executable_name = "api_server_macos"
-    else:  # Linux
-        executable_name = "api_server_linux"
+    # Unify executable name for consistency
+    executable_name = "api_server"
 
     # Define PyInstaller command as a list of arguments
     command = [
@@ -56,13 +51,27 @@ def build_backend():
         print("[+] PyInstaller build successful!")
         print(process.stdout)  # Print the output from PyInstaller
 
-        # Verify the executable was created
+        # Verify the executable was created, accounting for .exe on Windows
         dist_path = project_root / "dist"
-        executable_path = dist_path / executable_name
+
+        # PyInstaller adds .exe on Windows automatically
+        if sys.platform == "win32":
+            executable_path = dist_path / f"{executable_name}.exe"
+        else:
+            executable_path = dist_path / executable_name
+
         if executable_path.exists():
             print(f"[*] Executable created at: {executable_path}")
         else:
-            print("[!] Error: Executable not found after build.", file=sys.stderr)
+            print(
+                f"[!] Error: Executable not found at {executable_path} after build.",
+                file=sys.stderr,
+            )
+            # Also list contents of dist/ to help debug
+            if dist_path.exists():
+                print("[*] Contents of dist/:", file=sys.stderr)
+                for item in dist_path.iterdir():
+                    print(f"  - {item.name}", file=sys.stderr)
             print(process.stderr, file=sys.stderr)
             sys.exit(1)
 

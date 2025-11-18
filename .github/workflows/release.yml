@@ -52,59 +52,35 @@ jobs:
       - name: Place backend executable where Tauri expects it
         shell: bash
         run: |
+          # Standardized executable name is "api_server"
+          # PyInstaller adds ".exe" on Windows automatically.
           if [[ "${{ runner.os }}" == "Windows" ]]; then
             EXECUTABLE_NAME="api_server.exe"
-          elif [[ "${{ runner.os }}" == "macOS" ]]; then
-            EXECUTABLE_NAME="api_server_macos"
           else
-            EXECUTABLE_NAME="api_server_linux"
+            EXECUTABLE_NAME="api_server"
           fi
 
-          echo "Looking for backend at repo-root dist/$EXECUTABLE_NAME"
-          mkdir -p desktop-ui/dist
+          SOURCE_PATH="dist/$EXECUTABLE_NAME"
+          DEST_DIR="desktop-ui/dist"
+          DEST_PATH="$DEST_DIR/$EXECUTABLE_NAME"
 
-          if [ -f "dist/$EXECUTABLE_NAME" ]; then
-            mv "dist/$EXECUTABLE_NAME" "desktop-ui/dist/"
-            echo "Moved dist/$EXECUTABLE_NAME → desktop-ui/dist/"
+          echo "[*] Moving backend executable from $SOURCE_PATH to $DEST_PATH"
+          mkdir -p "$DEST_DIR"
+
+          if [ -f "$SOURCE_PATH" ]; then
+            mv "$SOURCE_PATH" "$DEST_PATH"
+            echo "[+] Successfully moved backend executable."
+            # Also rename on Windows to remove the .exe extension
+            if [[ "${{ runner.os }}" == "Windows" ]]; then
+              mv "$DEST_PATH" "$DEST_DIR/api_server"
+              echo "[+] Renamed api_server.exe to api_server on Windows."
+            fi
           else
-            echo "WARNING: dist/$EXECUTABLE_NAME not found. Listing dist and repo root for debug:"
-            ls -la dist || true
-            ls -la . || true
+            echo "[!] Error: Backend executable not found at $SOURCE_PATH."
+            echo "[*] Listing contents of dist/ for debugging:"
+            ls -la dist || echo "dist/ directory not found."
             exit 1
           fi
-
-      - name: Configure Tauri sidecar
-        shell: bash
-        run: |
-          # Determine the executable name based on the runner OS
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            EXECUTABLE_NAME="api_server.exe"
-          elif [[ "${{ runner.os }}" == "macOS" ]]; then
-            EXECUTABLE_NAME="api_server_macos"
-          else
-            EXECUTABLE_NAME="api_server_linux"
-          fi
-
-          echo "Using executable: $EXECUTABLE_NAME"
-
-          # Use sed to insert the sidecar configuration into tauri.conf.json
-          # This is a bit complex to ensure JSON validity. We add the "bundle.externalBin" array.
-          CONFIG_FILE="desktop-ui/src-tauri/tauri.conf.json"
-          SIDEcar_PATH="desktop-ui/dist/$EXECUTABLE_NAME" # Path relative to src-tauri
-
-          # Using Python to robustly modify the JSON
-          python <<EOF
-          import json
-          path = '$CONFIG_FILE'
-          with open(path, 'r') as f:
-              config = json.load(f)
-          config['tauri']['bundle']['externalBin'] = ['$SIDEcar_PATH']
-          with open(path, 'w') as f:
-              json.dump(config, f, indent=2)
-          EOF
-
-          echo "Successfully configured sidecar in $CONFIG_FILE"
-          cat $CONFIG_FILE # Print the modified config for verification
 
       - name: Build Tauri application
         run: npm run tauri build
