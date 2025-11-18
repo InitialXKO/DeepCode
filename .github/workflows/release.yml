@@ -107,14 +107,14 @@ jobs:
           ls -la desktop-ui/dist || true
           echo "repo-root dist:"
           ls -la dist || true
-            echo "tauri.conf.json externalBin:"
-            python - <<PY
-            import json
-            p='desktop-ui/src-tauri/tauri.conf.json'
-            with open(p) as f:
-              js=json.load(f)
-            print(js.get('tauri',{}).get('bundle',{}).get('externalBin'))
-            PY
+          echo "tauri.conf.json externalBin:"
+          python - <<PY
+          import json
+          p='desktop-ui/src-tauri/tauri.conf.json'
+          with open(p) as f:
+            js=json.load(f)
+          print(js.get('tauri',{}).get('bundle',{}).get('externalBin'))
+          PY
 
       - name: Build Tauri application
         run: npm run tauri build
