@@ -42,7 +42,31 @@ jobs:
       - name: Build Python backend executable
         id: build_backend
         run: python build_py_backend.py
+        
+      - name: Place backend executable where Tauri expects it
+        shell: bash
+        run: |
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            EXECUTABLE_NAME="api_server.exe"
+          elif [[ "${{ runner.os }}" == "macOS" ]]; then
+            EXECUTABLE_NAME="api_server_macos"
+          else
+            EXECUTABLE_NAME="api_server_linux"
+          fi
 
+          echo "Looking for backend at repo-root dist/$EXECUTABLE_NAME"
+          mkdir -p desktop-ui/dist
+
+          if [ -f "dist/$EXECUTABLE_NAME" ]; then
+            mv "dist/$EXECUTABLE_NAME" "desktop-ui/dist/"
+            echo "Moved dist/$EXECUTABLE_NAME → desktop-ui/dist/"
+          else
+            echo "WARNING: dist/$EXECUTABLE_NAME not found. Listing dist and repo root for debug:"
+            ls -la dist || true
+            ls -la . || true
+            exit 1
+          fi
+          
       - name: Configure Tauri sidecar
         shell: bash
         run: |
@@ -75,6 +99,22 @@ jobs:
 
           echo "Successfully configured sidecar in $CONFIG_FILE"
           cat $CONFIG_FILE # Print the modified config for verification
+
+      - name: Verify sidecar and tauri config
+        shell: bash
+        run: |
+          echo "desktop-ui/dist:"
+          ls -la desktop-ui/dist || true
+          echo "repo-root dist:"
+          ls -la dist || true
+            echo "tauri.conf.json externalBin:"
+            python - <<PY
+            import json
+            p='desktop-ui/src-tauri/tauri.conf.json'
+            with open(p) as f:
+              js=json.load(f)
+            print(js.get('tauri',{}).get('bundle',{}).get('externalBin'))
+            PY
 
       - name: Build Tauri application
         run: npm run tauri build
