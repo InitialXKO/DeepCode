@@ -84,7 +84,7 @@ jobs:
           # Use sed to insert the sidecar configuration into tauri.conf.json
           # This is a bit complex to ensure JSON validity. We add the "bundle.externalBin" array.
           CONFIG_FILE="desktop-ui/src-tauri/tauri.conf.json"
-          SIDEcar_PATH="../dist/$EXECUTABLE_NAME" # Path relative to src-tauri
+          SIDEcar_PATH="desktop-ui/dist/$EXECUTABLE_NAME" # Path relative to src-tauri
 
           # Using Python to robustly modify the JSON
           python <<EOF
