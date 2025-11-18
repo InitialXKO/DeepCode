@@ -108,7 +108,7 @@ jobs:
           echo "repo-root dist:"
           ls -la dist || true
           echo "tauri.conf.json externalBin:"
-          python - <<PY
+          python <<PY
           import json
           p='desktop-ui/src-tauri/tauri.conf.json'
           with open(p) as f:
