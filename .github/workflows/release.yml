@@ -63,11 +63,15 @@ jobs:
           SIDEcar_PATH="../dist/$EXECUTABLE_NAME" # Path relative to src-tauri
 
           # Using Python to robustly modify the JSON
-          python -c "import json; \
-          path = '$CONFIG_FILE'; \
-          with open(path, 'r') as f: config = json.load(f); \
-          config['tauri']['bundle']['externalBin'] = ['$SIDEcar_PATH']; \
-          with open(path, 'w') as f: json.dump(config, f, indent=2);"
+          python <<EOF
+          import json
+          path = '$CONFIG_FILE'
+          with open(path, 'r') as f:
+              config = json.load(f)
+          config['tauri']['bundle']['externalBin'] = ['$SIDEcar_PATH']
+          with open(path, 'w') as f:
+              json.dump(config, f, indent=2)
+          EOF
 
           echo "Successfully configured sidecar in $CONFIG_FILE"
           cat $CONFIG_FILE # Print the modified config for verification
