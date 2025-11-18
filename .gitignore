@@ -64,3 +64,14 @@ run_indexer_with_filtering.py
 
 # Cline files
 memory-bank/
+
+# Jules' additions for Tauri UI and build artifacts
+desktop-ui/node_modules/
+desktop-ui/dist/
+desktop-ui/src-tauri/target/
+desktop-ui/.vite/
+temp_uploads/
+*.log
+dist/
+build/
+*.spec

@@ -1,0 +1,92 @@
+name: Release DeepCode Desktop App
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-tauri:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ubuntu-latest, macos-latest, windows-latest]
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11' # Using a common stable version
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install frontend dependencies
+        run: npm install
+        working-directory: ./desktop-ui
+
+      - name: Build Python backend executable
+        id: build_backend
+        run: python build_py_backend.py
+
+      - name: Configure Tauri sidecar
+        shell: bash
+        run: |
+          # Determine the executable name based on the runner OS
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            EXECUTABLE_NAME="api_server.exe"
+          elif [[ "${{ runner.os }}" == "macOS" ]]; then
+            EXECUTABLE_NAME="api_server_macos"
+          else
+            EXECUTABLE_NAME="api_server_linux"
+          fi
+
+          echo "Using executable: $EXECUTABLE_NAME"
+
+          # Use sed to insert the sidecar configuration into tauri.conf.json
+          # This is a bit complex to ensure JSON validity. We add the "bundle.externalBin" array.
+          CONFIG_FILE="desktop-ui/src-tauri/tauri.conf.json"
+          SIDEcar_PATH="../dist/$EXECUTABLE_NAME" # Path relative to src-tauri
+
+          # Using Python to robustly modify the JSON
+          python -c "import json; \
+          path = '$CONFIG_FILE'; \
+          with open(path, 'r') as f: config = json.load(f); \
+          config['tauri']['bundle']['externalBin'] = ['$SIDEcar_PATH']; \
+          with open(path, 'w') as f: json.dump(config, f, indent=2);"
+
+          echo "Successfully configured sidecar in $CONFIG_FILE"
+          cat $CONFIG_FILE # Print the modified config for verification
+
+      - name: Build Tauri application
+        run: npm run tauri build
+        working-directory: ./desktop-ui
+        env:
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: deepcode-desktop-${{ matrix.platform }}
+          # Path needs to be adjusted based on Tauri's output structure
+          path: |
+            desktop-ui/src-tauri/target/release/bundle/**/*.AppImage
+            desktop-ui/src-tauri/target/release/bundle/**/*.deb
+            desktop-ui/src-tauri/target/release/bundle/**/*.dmg
+            desktop-ui/src-tauri/target/release/bundle/**/*.msi
+          if-no-files-found: error
