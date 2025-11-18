@@ -63,7 +63,10 @@ def build_backend():
         if executable_path.exists():
             print(f"[*] Executable created at: {executable_path}")
         else:
-            print(f"[!] Error: Executable not found at {executable_path} after build.", file=sys.stderr)
+            print(
+                f"[!] Error: Executable not found at {executable_path} after build.",
+                file=sys.stderr,
+            )
             # Also list contents of dist/ to help debug
             if dist_path.exists():
                 print("[*] Contents of dist/:", file=sys.stderr)
