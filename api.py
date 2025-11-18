@@ -33,13 +33,17 @@ app = FastAPI(
 
 # --- Pydantic Models for Request Bodies ---
 
+
 class TaskRequest(BaseModel):
     """Request model for URL or chat-based tasks."""
+
     input_source: str
     input_type: str  # Should be 'url' or 'chat'
     enable_indexing: Optional[bool] = True
 
+
 # --- Helper Functions ---
+
 
 def save_upload_file_tmp(upload_file: UploadFile) -> str:
     """Saves an uploaded file to a temporary location and returns the path."""
@@ -62,12 +66,15 @@ def save_upload_file_tmp(upload_file: UploadFile) -> str:
     finally:
         upload_file.file.close()
 
+
 # --- API Endpoints ---
+
 
 @app.get("/", summary="Health Check")
 async def read_root():
     """A simple health check endpoint to confirm the API is running."""
     return {"status": "ok", "message": "Welcome to the DeepCode API"}
+
 
 @app.post("/process/text", summary="Process Text or URL Input")
 async def process_text_task(request: TaskRequest):
@@ -75,7 +82,9 @@ async def process_text_task(request: TaskRequest):
     Processes a task based on a text input (like a chat message or a URL).
     """
     if request.input_type not in ["chat", "url"]:
-        raise HTTPException(status_code=400, detail="Invalid input_type. Must be 'chat' or 'url'.")
+        raise HTTPException(
+            status_code=400, detail="Invalid input_type. Must be 'chat' or 'url'."
+        )
 
     try:
         # We don't have a progress callback in this API context, so we pass None.
@@ -88,13 +97,14 @@ async def process_text_task(request: TaskRequest):
         return result
     except Exception as e:
         # Catch potential exceptions from the core logic
-        raise HTTPException(status_code=500, detail=f"An error occurred during processing: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"An error occurred during processing: {str(e)}"
+        )
 
 
 @app.post("/process/file", summary="Process File Input")
 async def process_file_task(
-    enable_indexing: bool = Form(True),
-    file: UploadFile = File(...)
+    enable_indexing: bool = Form(True), file: UploadFile = File(...)
 ):
     """
     Processes a task based on an uploaded file (e.g., PDF, DOCX).
@@ -116,11 +126,14 @@ async def process_file_task(
         )
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred during processing: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"An error occurred during processing: {str(e)}"
+        )
     finally:
         # Clean up the temporary file after processing is complete
         if temp_file_path and os.path.exists(temp_file_path):
             os.remove(temp_file_path)
+
 
 # --- Main entry point for running the server ---
 
