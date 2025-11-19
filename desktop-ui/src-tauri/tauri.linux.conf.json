@@ -1,0 +1,7 @@
+{
+  "bundle": {
+    "externalBin": [
+      "../dist/api_server_linux"
+    ]
+  }
+}
