@@ -35,12 +35,11 @@ def get_rust_target_triple():
 def build_backend():
     """
     Builds the Python backend, renames the executable to include the Rust target triple,
-    and places it in the directory where the Tauri build expects to find it.
+    and places it in the root /dist directory, which is a safe location.
     """
     project_root = Path(__file__).parent.resolve()
     api_script = project_root / "api.py"
     dist_dir = project_root / "dist"
-    tauri_dist_dir = project_root / "desktop-ui" / "dist"
 
     if not api_script.exists():
         print(f"[!] Error: Target script {api_script} not found.", file=sys.stderr)
@@ -93,9 +92,9 @@ def build_backend():
     if sys.platform == "win32":
         final_executable_name += ".exe"
 
-    # 4. Rename and move the executable
+    # 4. Rename the executable within the root /dist directory
     source_path = dist_dir / base_executable_name
-    dest_path = tauri_dist_dir / final_executable_name
+    dest_path = dist_dir / final_executable_name
 
     if not source_path.exists():
         print(
@@ -103,15 +102,14 @@ def build_backend():
         )
         sys.exit(1)
 
-    # Ensure the destination directory exists
-    tauri_dist_dir.mkdir(exist_ok=True)
-
-    print(f"[*] Renaming and moving '{source_path}' to '{dest_path}'")
+    # The /dist directory is created by PyInstaller, so it will exist.
+    print(f"[*] Renaming '{source_path}' to '{dest_path}'")
     try:
+        # Use shutil.move to perform the rename operation
         shutil.move(str(source_path), str(dest_path))
         print("[+] Executable successfully placed for Tauri build.")
     except Exception as e:
-        print(f"[!] Error moving executable: {e}", file=sys.stderr)
+        print(f"[!] Error renaming executable: {e}", file=sys.stderr)
         sys.exit(1)
 
 
