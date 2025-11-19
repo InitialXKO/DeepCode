@@ -1,7 +1,9 @@
 {
-  "bundle": {
-    "externalBin": [
-      "../dist/api_server.exe"
-    ]
+  "tauri": {
+    "bundle": {
+      "externalBin": [
+        "../dist/api_server.exe"
+      ]
+    }
   }
 }
