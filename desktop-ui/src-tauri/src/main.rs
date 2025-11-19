@@ -39,7 +39,7 @@ struct SystemDiagnostics {
 async fn make_post_request<T: Serialize, R: for<'de> Deserialize<'de>>(endpoint: &str, body: &T) -> Result<R, String> {
     let client = Client::new();
     let url = format!("http://localhost:8000{}", endpoint);
-    
+
     let response = client.post(&url)
         .json(body)
         .send()
@@ -58,7 +58,7 @@ async fn make_post_request<T: Serialize, R: for<'de> Deserialize<'de>>(endpoint:
 async fn make_get_request<R: for<'de> Deserialize<'de>>(endpoint: &str) -> Result<R, String> {
     let client = Client::new();
     let url = format!("http://localhost:8000{}", endpoint);
-    
+
     let response = client.get(&url)
         .send()
         .await
@@ -79,7 +79,7 @@ async fn make_get_request<R: for<'de> Deserialize<'de>>(endpoint: &str) -> Resul
 async fn generate_questions(initial_requirement: String) -> Result<Vec<Question>, String> {
     #[derive(Serialize)]
     struct Request { initial_requirement: String }
-    
+
     make_post_request("/generate_questions", &Request { initial_requirement }).await
 }
 
@@ -87,7 +87,7 @@ async fn generate_questions(initial_requirement: String) -> Result<Vec<Question>
 async fn generate_detailed_requirements(initial_requirement: String, answers: std::collections::HashMap<String, String>) -> Result<String, String> {
     #[derive(Serialize)]
     struct Request { initial_requirement: String, answers: std::collections::HashMap<String, String> }
-    
+
     make_post_request("/generate_requirements", &Request { initial_requirement, answers }).await
 }
 
@@ -95,7 +95,7 @@ async fn generate_detailed_requirements(initial_requirement: String, answers: st
 async fn edit_requirements(current_requirements: String, feedback: String) -> Result<String, String> {
     #[derive(Serialize)]
     struct Request { current_requirements: String, feedback: String }
-    
+
     make_post_request("/edit_requirements", &Request { current_requirements, feedback }).await
 }
 
@@ -108,7 +108,7 @@ async fn get_processing_history() -> Result<Vec<ProcessingHistoryEntry>, String>
 async fn clear_processing_history() -> Result<(), String> {
     let client = Client::new();
     let url = "http://localhost:8000/processing_history";
-    
+
     let response = client.delete(url)
         .send()
         .await
@@ -117,7 +117,7 @@ async fn clear_processing_history() -> Result<(), String> {
     if !response.status().is_success() {
         return Err(format!("API Error: {}", response.status()));
     }
-    
+
     Ok(())
 }
 
@@ -130,7 +130,7 @@ async fn get_system_diagnostics() -> Result<SystemDiagnostics, String> {
 async fn reset_application_state() -> Result<(), String> {
     let client = Client::new();
     let url = "http://localhost:8000/reset_state";
-    
+
     let response = client.post(url)
         .send()
         .await
@@ -139,7 +139,7 @@ async fn reset_application_state() -> Result<(), String> {
     if !response.status().is_success() {
         return Err(format!("API Error: {}", response.status()));
     }
-    
+
     Ok(())
 }
 
