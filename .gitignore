@@ -66,6 +66,7 @@ run_indexer_with_filtering.py
 memory-bank/
 
 # Jules' additions for Tauri UI and build artifacts
+node_modules/
 desktop-ui/node_modules/
 desktop-ui/dist/
 desktop-ui/src-tauri/target/
