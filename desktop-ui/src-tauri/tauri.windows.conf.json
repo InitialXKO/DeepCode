@@ -1,9 +1,0 @@
-{
-  "tauri": {
-    "bundle": {
-      "externalBin": [
-        "../dist/api_server.exe"
-      ]
-    }
-  }
-}

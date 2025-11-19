@@ -54,23 +54,34 @@ jobs:
         run: |
           # Determine executable name based on runner OS
           if [[ "${{ runner.os }}" == "Windows" ]]; then
-            EXECUTABLE_NAME="api_server.exe"
+            ORIGINAL_NAME="api_server.exe"
           elif [[ "${{ runner.os }}" == "macOS" ]]; then
-            EXECUTABLE_NAME="api_server_macos"
+            ORIGINAL_NAME="api_server_macos"
           else
-            EXECUTABLE_NAME="api_server_linux"
+            ORIGINAL_NAME="api_server_linux"
           fi
 
-          SOURCE_PATH="dist/$EXECUTABLE_NAME"
-          DEST_DIR="desktop-ui/dist"
-          DEST_PATH="$DEST_DIR/$EXECUTABLE_NAME"
+          # The `externalBin` is configured as `../dist/api_server`
+          # Tauri expects the binary to be named `api_server` + `-${TARGET_TRIPLE}`
+          # We need to get the target triple from rustc
+          TARGET_TRIPLE=$(rustc -vV | grep host | cut -d: -f2 | tr -d ' ')
 
-          echo "[*] Moving backend executable from $SOURCE_PATH to $DEST_PATH"
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            RENAMED_NAME="api_server-${TARGET_TRIPLE}.exe"
+          else
+            RENAMED_NAME="api_server-${TARGET_TRIPLE}"
+          fi
+
+          SOURCE_PATH="dist/$ORIGINAL_NAME"
+          DEST_DIR="desktop-ui/dist"
+          RENAMED_PATH="$DEST_DIR/$RENAMED_NAME"
+
+          echo "[*] Renaming backend executable from $SOURCE_PATH to $RENAMED_PATH"
           mkdir -p "$DEST_DIR"
 
           if [ -f "$SOURCE_PATH" ]; then
-            mv "$SOURCE_PATH" "$DEST_PATH"
-            echo "[+] Successfully moved backend executable."
+            mv "$SOURCE_PATH" "$RENAMED_PATH"
+            echo "[+] Successfully renamed backend executable."
           else
             echo "[!] Error: Backend executable not found at $SOURCE_PATH."
             echo "[*] Listing contents of dist/ for debugging:"
