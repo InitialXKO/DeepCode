@@ -1457,11 +1457,11 @@ async def synthesize_code_implementation_agent(
 
                 # Add generated files list to the result
                 generated_files = []
-                code_dir = implementation_result['code_directory']
+                code_dir = implementation_result["code_directory"]
                 for root, _, files in os.walk(code_dir):
                     for file in files:
                         generated_files.append(os.path.join(root, file))
-                implementation_result['generated_files'] = generated_files
+                implementation_result["generated_files"] = generated_files
 
                 # Save implementation results to file
                 with open(

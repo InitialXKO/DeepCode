@@ -6,7 +6,15 @@ import json
 import asyncio
 from datetime import datetime
 from typing import List, Dict, Optional, Any
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import (
+    FastAPI,
+    UploadFile,
+    File,
+    Form,
+    HTTPException,
+    WebSocket,
+    WebSocketDisconnect,
+)
 from pydantic import BaseModel
 import uvicorn
 
@@ -43,6 +51,7 @@ app = FastAPI(
     version="1.0.0",
 )
 
+
 class ConnectionManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
@@ -58,7 +67,9 @@ class ConnectionManager:
         for connection in self.active_connections:
             await connection.send_text(message)
 
+
 manager = ConnectionManager()
+
 
 @app.websocket("/ws/progress")
 async def websocket_endpoint(websocket: WebSocket):
@@ -68,6 +79,7 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(websocket)
+
 
 # --- Data Persistence (Simple JSON for History) ---
 HISTORY_FILE = "processing_history.json"
