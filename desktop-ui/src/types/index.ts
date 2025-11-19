@@ -44,6 +44,7 @@ export interface ApiResponse {
     repo_result?: {
         result: string;
         files: string[];
+        generated_files?: string[];
     };
     error?: string;
     traceback?: string;
