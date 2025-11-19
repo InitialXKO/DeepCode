@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { save } from '@tauri-apps/api/dialog';
+import { invoke } from '@tauri-apps/api/tauri';
 import { ApiResponse } from './types';
 import './ResultsDisplay.css';
 
@@ -10,6 +12,29 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ result }) => {
     const [activeTab, setActiveTab] = useState<'analysis' | 'download' | 'implementation' | 'files'>('implementation');
 
     if (!result) return null;
+
+    const handleExport = async () => {
+        const filePath = await save({
+            filters: [{
+                name: 'JSON',
+                extensions: ['json']
+            }]
+        });
+        if (filePath) {
+            await invoke('write_file', { filePath, content: JSON.stringify(result, null, 2) });
+        }
+    };
+
+    const handleDownload = async (filePath: string) => {
+        const content = await invoke<number[]>('read_file_binary', { filePath });
+        const blob = new Blob([new Uint8Array(content)], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filePath.split('/').pop() || 'download';
+        a.click();
+        URL.revokeObjectURL(url);
+    };
 
     const renderTabContent = () => {
         switch (activeTab) {
@@ -41,21 +66,18 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ result }) => {
                     </div>
                 );
             case 'files':
+                const files = result.repo_result?.generated_files || [];
                 return (
                     <div className="tab-content files-content">
                         <h3>Generated Files</h3>
                         <div className="file-list">
-                            {/* Placeholder for file list - in a real app, this would list generated files */}
-                            <div className="file-item">
-                                <span className="file-icon">📄</span>
-                                <span className="file-name">implementation_plan.md</span>
-                                <button className="download-btn">Download</button>
-                            </div>
-                            <div className="file-item">
-                                <span className="file-icon">📦</span>
-                                <span className="file-name">generated_code.zip</span>
-                                <button className="download-btn">Download</button>
-                            </div>
+                            {files.length > 0 ? files.map((file: string, index: number) => (
+                                <div key={index} className="file-item">
+                                    <span className="file-icon">📄</span>
+                                    <span className="file-name">{file.split('/').pop()}</span>
+                                    <button className="download-btn" onClick={() => handleDownload(file)}>Download</button>
+                                </div>
+                            )) : <p>No files generated.</p>}
                         </div>
                     </div>
                 );
@@ -71,6 +93,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ result }) => {
                 <div className="status-badge success">
                     <span className="dot"></span> Completed
                 </div>
+                <button className="export-btn" onClick={handleExport}>Export Results</button>
             </div>
 
             <div className="tabs-container">

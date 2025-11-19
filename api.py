@@ -6,7 +6,7 @@ import json
 import asyncio
 from datetime import datetime
 from typing import List, Dict, Optional, Any
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 import uvicorn
 
@@ -42,6 +42,32 @@ app = FastAPI(
     description="An API to interact with the DeepCode multi-agent AI engine.",
     version="1.0.0",
 )
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            await connection.send_text(message)
+
+manager = ConnectionManager()
+
+@app.websocket("/ws/progress")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
 
 # --- Data Persistence (Simple JSON for History) ---
 HISTORY_FILE = "processing_history.json"
@@ -138,12 +164,15 @@ async def process_text_task(request: TaskRequest):
             status_code=400, detail="Invalid input_type. Must be 'chat' or 'url'."
         )
 
+    async def progress_callback(progress: int, message: str):
+        await manager.broadcast(json.dumps({"progress": progress, "message": message}))
+
     try:
         result = await process_input_async(
             input_source=request.input_source,
             input_type=request.input_type,
             enable_indexing=request.enable_indexing,
-            progress_callback=None,
+            progress_callback=progress_callback,
         )
 
         # Add to history
@@ -170,6 +199,9 @@ async def process_file_task(
 ):
     if not file:
         raise HTTPException(status_code=400, detail="No file uploaded.")
+
+    async def progress_callback(progress: int, message: str):
+        await manager.broadcast(json.dumps({"progress": progress, "message": message}))
 
     temp_file_path = None
     converted_pdf_path = None
@@ -208,7 +240,7 @@ async def process_file_task(
             input_source=processing_path,
             input_type="file",
             enable_indexing=enable_indexing,
-            progress_callback=None,
+            progress_callback=progress_callback,
         )
 
         # Add to history

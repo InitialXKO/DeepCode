@@ -143,6 +143,37 @@ async fn reset_application_state() -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+async fn process_file(file_path: String) -> Result<String, String> {
+    let file_content = fs::read(&file_path).map_err(|e| format!("Failed to read file: {}", e))?;
+    let file_name = std::path::Path::new(&file_path)
+        .file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or("unknown_file")
+        .to_string();
+
+    let client = Client::new();
+    let url = "http://localhost:8000/process/file";
+
+    let part = reqwest::multipart::Part::bytes(file_content)
+        .file_name(file_name);
+    let form = reqwest::multipart::Form::new()
+        .part("file", part)
+        .text("enable_indexing", "true");
+
+    let response = client.post(url)
+        .multipart(form)
+        .send()
+        .await
+        .map_err(|e| format!("Request failed: {}", e))?;
+
+    if !response.status().is_success() {
+        return Err(format!("API Error: {}", response.status()));
+    }
+
+    response.text().await.map_err(|e| format!("Failed to read response: {}", e))
+}
+
 // --- Existing Config Commands ---
 
 #[tauri::command]
@@ -237,6 +268,16 @@ fn write_secrets(app_handle: tauri::AppHandle, content: String) -> Result<(), St
     fs::write(resource_path, content).map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+fn write_file(file_path: String, content: String) -> Result<(), String> {
+    fs::write(file_path, content).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn read_file_binary(file_path: String) -> Result<Vec<u8>, String> {
+    fs::read(file_path).map_err(|e| e.to_string())
+}
+
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
@@ -250,7 +291,10 @@ fn main() {
             get_processing_history,
             clear_processing_history,
             get_system_diagnostics,
-            reset_application_state
+            reset_application_state,
+            process_file,
+            write_file,
+            read_file_binary
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

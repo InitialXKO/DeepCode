@@ -1455,6 +1455,14 @@ async def synthesize_code_implementation_agent(
                 print("Code implementation completed successfully!")
                 print(f"Code directory: {implementation_result['code_directory']}")
 
+                # Add generated files list to the result
+                generated_files = []
+                code_dir = implementation_result['code_directory']
+                for root, _, files in os.walk(code_dir):
+                    for file in files:
+                        generated_files.append(os.path.join(root, file))
+                implementation_result['generated_files'] = generated_files
+
                 # Save implementation results to file
                 with open(
                     dir_info["implementation_report_path"], "w", encoding="utf-8"
