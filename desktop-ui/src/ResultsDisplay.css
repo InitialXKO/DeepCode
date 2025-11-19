@@ -1,0 +1,117 @@
+.results-display {
+    background: var(--bg-secondary);
+    border-radius: 16px;
+    padding: 1.5rem;
+    padding: 0.5rem 0.5rem 0;
+}
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 8px 8px 0 0;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    margin-right: 0.25rem;
+}
+
+.tab-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+.tab-btn.active {
+    background: var(--bg-primary);
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.tabs-body {
+    padding: 1.5rem;
+    min-height: 300px;
+}
+
+.tab-content h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+}
+
+.result-card {
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    overflow-x: auto;
+}
+
+.result-card pre {
+    margin: 0;
+    white-space: pre-wrap;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.file-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    background: var(--bg-tertiary);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s ease;
+}
+
+.file-item:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary-color);
+}
+
+.file-icon {
+    font-size: 1.5rem;
+    margin-right: 1rem;
+}
+
+.file-name {
+    flex: 1;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.download-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.download-btn:hover {
+    background: var(--primary-hover);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

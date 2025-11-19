@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "icon-gen": "^5.0.0",
+    "png2icons": "^2.0.1"
+  }
+}

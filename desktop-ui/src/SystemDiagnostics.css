@@ -1,0 +1,307 @@
+.diagnostics-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+}
+
+.diagnostics-container {
+    background: white;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 900px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+}
+
+.diagnostics-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 30px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.diagnostics-header h2 {
+    margin: 0;
+    color: #333;
+    font-size: 1.5rem;
+}
+
+.diagnostics-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 30px;
+}
+
+/* Diagnostic Sections */
+.diag-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 10px;
+}
+
+.diag-section h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 1.2rem;
+}
+
+/* Info Grid */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.info-item {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.info-label {
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 600;
+}
+
+.info-value {
+    font-size: 1.1rem;
+    color: #333;
+    font-weight: 500;
+}
+
+/* Module Grid */
+.module-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.module-item {
+    background: white;
+    padding: 12px 15px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+}
+
+.module-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.module-item.available {
+    border-left: 4px solid #4caf50;
+}
+
+.module-item.missing {
+    border-left: 4px solid #f44336;
+    opacity: 0.7;
+}
+
+.module-icon {
+    font-size: 1.2rem;
+}
+
+.module-name {
+    font-size: 0.95rem;
+    color: #333;
+    font-weight: 500;
+}
+
+/* Troubleshooting Tips */
+.tips-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.tip-item {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.tip-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tip-item summary {
+    padding: 15px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #333;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.tip-item summary::-webkit-details-marker {
+    display: none;
+}
+
+.tip-item summary::before {
+    content: '▶';
+    font-size: 0.8rem;
+    transition: transform 0.3s ease;
+}
+
+.tip-item[open] summary::before {
+    transform: rotate(90deg);
+}
+
+.tip-content {
+    padding: 0 15px 15px 40px;
+    color: #666;
+}
+
+.tip-content p {
+    margin: 8px 0;
+    line-height: 1.6;
+}
+
+.tip-content strong {
+    color: #333;
+}
+
+/* Reset Section */
+.reset-section {
+    background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(238, 90, 111, 0.1) 100%);
+    border-left: 4px solid #f44336;
+}
+
+.reset-section p {
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.btn-reset {
+    background: #f44336;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-reset:hover {
+    background: #d32f2f;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+}
+
+.reset-message {
+    margin-top: 15px;
+    padding: 12px;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.reset-message.success {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #4caf50;
+}
+
+.reset-message.error {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #f44336;
+}
+
+/* Error State */
+.error-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.error-state p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.btn-retry {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-retry:hover {
+    background: #5568d3;
+    transform: translateY(-2px);
+}
+
+/* Footer */
+.diagnostics-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 20px 30px;
+    border-top: 2px solid #f0f0f0;
+}
+
+.btn-refresh {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #f5f5f5;
+    color: #666;
+}
+
+.btn-refresh:hover {
+    background: #e0e0e0;
+    transform: translateY(-2px);
+}
+
+/* Scrollbar Styling */
+.diagnostics-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.diagnostics-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.diagnostics-content::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.diagnostics-content::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
