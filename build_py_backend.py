@@ -26,7 +26,9 @@ def get_rust_target_triple():
             sys.exit(1)
     except (FileNotFoundError, subprocess.CalledProcessError) as e:
         print(f"[!] Error executing 'rustc': {e}", file=sys.stderr)
-        print("[*] Please ensure the Rust toolchain is installed and in the system's PATH.")
+        print(
+            "[*] Please ensure the Rust toolchain is installed and in the system's PATH."
+        )
         sys.exit(1)
 
 
@@ -96,7 +98,9 @@ def build_backend():
     dest_path = tauri_dist_dir / final_executable_name
 
     if not source_path.exists():
-        print(f"[!] Error: Built executable not found at {source_path}", file=sys.stderr)
+        print(
+            f"[!] Error: Built executable not found at {source_path}", file=sys.stderr
+        )
         sys.exit(1)
 
     # Ensure the destination directory exists
