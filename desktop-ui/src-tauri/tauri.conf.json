@@ -1,5 +1,4 @@
 {
-  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
@@ -43,22 +42,5 @@
         "height": 600
       }
     ]
-  },
-  "platforms": {
-    "windows": {
-      "bundle": {
-        "externalBin": ["../dist/api_server.exe"]
-      }
-    },
-    "linux": {
-      "bundle": {
-        "externalBin": ["../dist/api_server_linux"]
-      }
-    },
-    "macos": {
-      "bundle": {
-        "externalBin": ["../dist/api_server_macos"]
-      }
-    }
   }
 }
