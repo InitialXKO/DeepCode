@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { invoke } from '@tauri-apps/api/tauri';
 import './App.css';
 import Settings from './Settings';
 import GuidedAnalysis from './GuidedAnalysis';
 import ProcessingHistory from './ProcessingHistory';
 import SystemDiagnostics from './SystemDiagnostics';
 import ResultsDisplay from './ResultsDisplay';
+import FileInput from './FileInput'; // Import the new component
+import ProgressDisplay from './ProgressDisplay'; // Import the new component
 import { ApiResponse } from './types';
 
 function App() {
@@ -22,16 +25,45 @@ function App() {
   const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState(false);
   const [showGuidedAnalysis, setShowGuidedAnalysis] = useState(false);
   const [enableIndexing, setEnableIndexing] = useState(true);
+  const [progress, setProgress] = useState(0);
+  const [statusText, setStatusText] = useState('');
+
+  const workflowSteps = [
+    { icon: '🚀', title: 'Initialize', description: 'Setting up AI engine' },
+    { icon: '📊', title: 'Analyze', description: 'Analyzing paper content' },
+    { icon: '📥', title: 'Download', description: 'Processing document' },
+    { icon: '📋', title: 'Plan', description: 'Generating code plan' },
+    { icon: '🔍', title: 'References', description: 'Analyzing references' },
+    { icon: '📦', title: 'Repos', description: 'Downloading repositories' },
+    { icon: '🗂️', title: 'Index', description: 'Building code index' },
+    { icon: '⚙️', title: 'Implement', description: 'Implementing code' },
+  ];
+
+  useEffect(() => {
+    const ws = new WebSocket('ws://localhost:8000/ws/progress');
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      setProgress(data.progress);
+      setStatusText(data.message);
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket disconnected');
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, []);
 
   // --- Event Handlers ---
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setTextInput(e.target.value);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFileInput(e.target.files[0]);
-    }
+  const handleFileSelect = (file: File) => {
+    setFileInput(file);
   };
 
   const handleSubmit = async (requirements?: string) => {
@@ -41,18 +73,14 @@ function App() {
 
     const inputSource = requirements || textInput;
 
-    let response: Response;
+    let response: any; // Allow for different response types
     try {
       if (inputType === 'file' && fileInput) {
-        const formData = new FormData();
-        formData.append('file', fileInput);
-        formData.append('enable_indexing', enableIndexing.toString());
-        response = await fetch('http://localhost:8000/process/file', {
-          method: 'POST',
-          body: formData,
-        });
+        // Use Tauri command for file processing
+        response = await invoke('process_file', { filePath: (fileInput as any).path });
       } else if (inputSource.trim() !== '') {
-        response = await fetch('http://localhost:8000/process/text', {
+        // Use fetch for text/url processing
+        const fetchResponse = await fetch('http://localhost:8000/process/text', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -61,15 +89,16 @@ function App() {
             enable_indexing: enableIndexing,
           }),
         });
+        response = await fetchResponse.json();
       } else {
         alert('Please provide an input.');
         setTaskStatus('idle');
         return;
       }
 
-      const data: ApiResponse = await response.json();
+      const data: ApiResponse = typeof response === 'string' ? JSON.parse(response) : response;
 
-      if (!response.ok || data.status === 'error') {
+      if (data.status === 'error') {
         throw new Error(data.error || 'An unknown error occurred.');
       }
 
@@ -104,14 +133,7 @@ function App() {
   const renderInput = () => {
     switch (inputType) {
       case 'file':
-        return (
-          <input
-            type="file"
-            onChange={handleFileChange}
-            className="file-input"
-            accept=".pdf,.doc,.docx,.txt,.html,.md"
-          />
-        );
+        return <FileInput onFileChange={handleFileSelect} selectedFile={fileInput} />;
       case 'chat':
       case 'url':
       default:
@@ -284,13 +306,13 @@ function App() {
         {!showGuidedAnalysis && (
           <>
             <div className="input-selector">
-              <button onClick={() => setInputType('chat')} className={inputType === 'chat' ? 'active' : ''}>
+              <button onClick={() => setInputType('chat')} className={inputType === 'chat' ? 'active' : ''} aria-label="Chat Input">
                 💬 Chat
               </button>
-              <button onClick={() => setInputType('url')} className={inputType === 'url' ? 'active' : ''}>
+              <button onClick={() => setInputType('url')} className={inputType === 'url' ? 'active' : ''} aria-label="URL Input">
                 🌐 URL
               </button>
-              <button onClick={() => setInputType('file')} className={inputType === 'file' ? 'active' : ''}>
+              <button onClick={() => setInputType('file')} className={inputType === 'file' ? 'active' : ''} aria-label="File Input">
                 📁 File
               </button>
             </div>
@@ -310,13 +332,15 @@ function App() {
         )}
 
         <div className="status-area">
-          {taskStatus === 'processing' && (
-            <div className="processing-indicator">
-              <div className="loader"></div>
-              <p>Processing in progress... Please wait.</p>
-            </div>
-          )}
-          {renderResult()}
+          {taskStatus === 'processing' ? (
+            <ProgressDisplay
+              workflowSteps={workflowSteps}
+              currentStep={Math.floor(progress / 12.5)}
+              statusText={statusText}
+              progress={progress}
+              status="active"
+            />
+          ) : renderResult()}
         </div>
       </main>
 

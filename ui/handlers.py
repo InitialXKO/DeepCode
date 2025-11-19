@@ -141,6 +141,7 @@ async def process_input_async(
                 "download_result": "Integrated into complete workflow",
                 "repo_result": repo_result,
                 "status": "success",
+                "generated_files": repo_result.get("generated_files", [])
             }
 
     except Exception as e:
