@@ -30,7 +30,7 @@
         "icons/icon.ico"
       ],
       "externalBin": [
-        "../dist/api_server"
+        "../../dist/api_server"
       ]
     },
     "security": {
