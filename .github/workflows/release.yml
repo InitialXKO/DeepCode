@@ -1,0 +1,61 @@
+name: Release DeepCode Desktop App
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build-tauri:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macos-latest, windows-latest]
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11' # Using a common stable version
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install frontend dependencies
+        run: npm install
+        working-directory: ./desktop-ui
+
+      - name: Build and place Python backend executable
+        run: python build_py_backend.py
+
+      - name: Build Tauri application
+        run: npm run tauri build
+        working-directory: ./desktop-ui
+        env:
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            desktop-ui/src-tauri/target/release/bundle/**/*.AppImage
+            desktop-ui/src-tauri/target/release/bundle/**/*.deb
+            desktop-ui/src-tauri/target/release/bundle/**/*.dmg
+            desktop-ui/src-tauri/target/release/bundle/**/*.msi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

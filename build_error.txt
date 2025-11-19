@@ -1,0 +1,16 @@
+    Checking webview2-com v0.19.1
+   Compiling deepcode-ui v0.1.0 (C:\Users\NUC\CascadeProjects\DeepCode\DeepCode\desktop-ui\src-tauri)
+error: failed to run custom build command for `deepcode-ui v0.1.0 (C:\Users\NUC\CascadeProjects\DeepCode\DeepCode\desktop-ui\src-tauri)`
+
+Caused by:
+  process didn't exit successfully: `C:\Users\NUC\CascadeProjects\DeepCode\DeepCode\desktop-ui\src-tauri\target\debug\build\deepcode-ui-8489f54891c2b26e\build-script-build` (exit code: 1)
+  --- stdout
+  cargo:rerun-if-env-changed=TAURI_CONFIG
+  cargo:rerun-if-changed=tauri.conf.json
+  cargo:rustc-check-cfg=cfg(desktop)
+  cargo:rustc-cfg=desktop
+  cargo:rustc-check-cfg=cfg(mobile)
+  cargo:rustc-check-cfg=cfg(dev)
+  cargo:rustc-cfg=dev
+  path matching ../../dist/api_server-x86_64-pc-windows-msvc.exe not found.
+warning: build failed, waiting for other jobs to finish...
