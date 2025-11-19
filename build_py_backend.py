@@ -1,79 +1,113 @@
 import sys
 import subprocess
 from pathlib import Path
+import re
+import shutil
+
+
+def get_rust_target_triple():
+    """
+    Executes `rustc -vV` to find the host target triple.
+    This is essential for naming the backend executable in a way that Tauri can find it.
+    """
+    try:
+        result = subprocess.run(
+            ["rustc", "-vV"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        # Use regex to find the 'host:' line and extract the triple
+        match = re.search(r"host: (.*)", result.stdout)
+        if match:
+            return match.group(1).strip()
+        else:
+            print("[!] Error: Could not determine Rust target triple.", file=sys.stderr)
+            sys.exit(1)
+    except (FileNotFoundError, subprocess.CalledProcessError) as e:
+        print(f"[!] Error executing 'rustc': {e}", file=sys.stderr)
+        print("[*] Please ensure the Rust toolchain is installed and in the system's PATH.")
+        sys.exit(1)
 
 
 def build_backend():
     """
-    Uses the PyInstaller command-line tool via subprocess to build the Python backend.
-    This approach is more robust in controlled environments like CI/CD.
+    Builds the Python backend, renames the executable to include the Rust target triple,
+    and places it in the directory where the Tauri build expects to find it.
     """
     project_root = Path(__file__).parent.resolve()
     api_script = project_root / "api.py"
+    dist_dir = project_root / "dist"
+    tauri_dist_dir = project_root / "desktop-ui" / "dist"
 
     if not api_script.exists():
         print(f"[!] Error: Target script {api_script} not found.", file=sys.stderr)
         sys.exit(1)
 
-    # Define executable name based on OS
+    # 1. Define the initial executable name based on OS
     if sys.platform == "win32":
-        executable_name = "api_server.exe"
+        base_executable_name = "api_server.exe"
     elif sys.platform == "darwin":
-        executable_name = "api_server_macos"
+        base_executable_name = "api_server_macos"
     else:  # Linux
-        executable_name = "api_server_linux"
+        base_executable_name = "api_server_linux"
 
-    # Define PyInstaller command as a list of arguments
-    command = [
-        # Use sys.executable to ensure we're using the correct Python interpreter's pyinstaller
+    # 2. Build the executable using PyInstaller
+    pyinstaller_command = [
         sys.executable,
         "-m",
         "PyInstaller",
         "--onefile",
         "--noconfirm",
-        f"--name={executable_name}",
-        # Add hidden imports that PyInstaller might miss
+        f"--name={base_executable_name}",
         "--hidden-import=uvicorn.logging",
         "--hidden-import=uvicorn.loops.auto",
         "--hidden-import=uvicorn.protocols.http.auto",
         "--hidden-import=uvicorn.protocols.websockets.auto",
         "--hidden-import=uvicorn.lifespan.on",
-        str(api_script.name),  # Pass only the script name, as we'll set the CWD
+        str(api_script.name),
     ]
 
     print(f"[*] Project Root: {project_root}")
-    print(f"[*] Executing command: {' '.join(command)}")
+    print(f"[*] Executing PyInstaller: {' '.join(pyinstaller_command)}")
 
     try:
-        # Execute the command with the working directory set to the project root
-        process = subprocess.run(
-            command,
-            cwd=project_root,  # This is the crucial fix
-            check=True,  # Raise an exception if the command fails
-            capture_output=True,  # Capture stdout/stderr
-            text=True,  # Decode stdout/stderr as text
+        subprocess.run(
+            pyinstaller_command,
+            cwd=project_root,
+            check=True,
+            capture_output=True,
+            text=True,
         )
         print("[+] PyInstaller build successful!")
-        print(process.stdout)  # Print the output from PyInstaller
-
-        # Verify the executable was created
-        dist_path = project_root / "dist"
-        executable_path = dist_path / executable_name
-        if executable_path.exists():
-            print(f"[*] Executable created at: {executable_path}")
-        else:
-            print("[!] Error: Executable not found after build.", file=sys.stderr)
-            print(process.stderr, file=sys.stderr)
-            sys.exit(1)
-
     except subprocess.CalledProcessError as e:
         print("[!] PyInstaller build failed.", file=sys.stderr)
-        print(f"[*] Return Code: {e.returncode}", file=sys.stderr)
-        print(f"[*] STDOUT:\n{e.stdout}", file=sys.stderr)
         print(f"[*] STDERR:\n{e.stderr}", file=sys.stderr)
         sys.exit(1)
+
+    # 3. Determine the final executable name with the Rust target triple
+    target_triple = get_rust_target_triple()
+    final_executable_name = f"api_server-{target_triple}"
+    if sys.platform == "win32":
+        final_executable_name += ".exe"
+
+    # 4. Rename and move the executable
+    source_path = dist_dir / base_executable_name
+    dest_path = tauri_dist_dir / final_executable_name
+
+    if not source_path.exists():
+        print(f"[!] Error: Built executable not found at {source_path}", file=sys.stderr)
+        sys.exit(1)
+
+    # Ensure the destination directory exists
+    tauri_dist_dir.mkdir(exist_ok=True)
+
+    print(f"[*] Renaming and moving '{source_path}' to '{dest_path}'")
+    try:
+        shutil.move(str(source_path), str(dest_path))
+        print("[+] Executable successfully placed for Tauri build.")
     except Exception as e:
-        print(f"[!] An unexpected error occurred: {e}", file=sys.stderr)
+        print(f"[!] Error moving executable: {e}", file=sys.stderr)
         sys.exit(1)
 
 

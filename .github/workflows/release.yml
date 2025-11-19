@@ -45,49 +45,8 @@ jobs:
         run: npm install
         working-directory: ./desktop-ui
 
-      - name: Build Python backend executable
-        id: build_backend
+      - name: Build and place Python backend executable
         run: python build_py_backend.py
-
-      - name: Place backend executable where Tauri expects it
-        shell: bash
-        run: |
-          # Determine executable name based on runner OS
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            ORIGINAL_NAME="api_server.exe"
-          elif [[ "${{ runner.os }}" == "macOS" ]]; then
-            ORIGINAL_NAME="api_server_macos"
-          else
-            ORIGINAL_NAME="api_server_linux"
-          fi
-
-          # The `externalBin` is configured as `../dist/api_server`
-          # Tauri expects the binary to be named `api_server` + `-${TARGET_TRIPLE}`
-          # We need to get the target triple from rustc
-          TARGET_TRIPLE=$(rustc -vV | grep host | cut -d: -f2 | tr -d ' ')
-
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            RENAMED_NAME="api_server-${TARGET_TRIPLE}.exe"
-          else
-            RENAMED_NAME="api_server-${TARGET_TRIPLE}"
-          fi
-
-          SOURCE_PATH="dist/$ORIGINAL_NAME"
-          DEST_DIR="desktop-ui/dist"
-          RENAMED_PATH="$DEST_DIR/$RENAMED_NAME"
-
-          echo "[*] Renaming backend executable from $SOURCE_PATH to $RENAMED_PATH"
-          mkdir -p "$DEST_DIR"
-
-          if [ -f "$SOURCE_PATH" ]; then
-            mv "$SOURCE_PATH" "$RENAMED_PATH"
-            echo "[+] Successfully renamed backend executable."
-          else
-            echo "[!] Error: Backend executable not found at $SOURCE_PATH."
-            echo "[*] Listing contents of dist/ for debugging:"
-            ls -la dist || echo "dist/ directory not found."
-            exit 1
-          fi
 
       - name: Build Tauri application
         run: npm run tauri build
